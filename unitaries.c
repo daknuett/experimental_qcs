@@ -73,3 +73,29 @@ unitary_two_qbit(qstate_t * state
     return 0; 
 }
 
+int
+unitary_two_qbit_semitrotter(
+                qstate_t * state
+                , unsigned short int act1
+                , unsigned short int act2
+                , size_t n_trot
+                , double * phis)
+{
+    size_t i;
+    for(i = 0; i < n_trot; i++)
+    {
+        qop_SAFE_APPLY(unitary_one_qbit(state, act1
+                                        , phis[6*i + 0]
+                                        , phis[6*i + 1]
+                                        , phis[6*i + 2]));
+        qop_SAFE_APPLY(unitary_one_qbit(state, act2
+                                        , phis[6*i + 3]
+                                        , phis[6*i + 4]
+                                        , phis[6*i + 5]));
+        if(i != n_trot - 1)
+        {
+            qop_SAFE_APPLY(qop_CZ(state, act1, act2));
+        }
+    }
+    return 0;
+}

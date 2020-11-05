@@ -81,3 +81,26 @@ qop_CX(qstate_t * state, unsigned short int act, unsigned short int control)
     qstate_switch_vectors(state);
     return 0;
 }
+
+
+int
+qop_CZ(qstate_t * state, unsigned short int act, unsigned short int control)
+{
+    qop_STATE_CHECK(state, act);
+    qop_STATE_CHECK(state, control);
+    size_t i;
+    for(i = 0; i < state->ndims; i++)
+    {
+        if(i & (1 << control))
+        {
+            out_vector(state)[i] = -1 * in_vector(state)[i];
+        }
+        else
+        {
+            out_vector(state)[i] = in_vector(state)[i];
+        }
+
+    }
+    qstate_switch_vectors(state);
+    return 0;
+}

@@ -7,6 +7,8 @@
 #include "qstate.h"
 #include "unitaries.h"
 
+#define NUM_DOF 12
+
 int
 U_encode(qstate_t * state, double x, double y);
 int
@@ -17,11 +19,11 @@ int main(int argc, char ** argv)
     qstate_t * state;
 
     int i, j;
-    double result; 
+    double result;
     double tmp;
 
-    double phis[15];
-    for(i = 0; i < 15; i++)
+    double phis[NUM_DOF];
+    for(i = 0; i < NUM_DOF; i++)
     {
         if(scanf("%lf", &tmp) != 1)
         {
@@ -32,12 +34,12 @@ int main(int argc, char ** argv)
     }
 
     // XXX: This is the result obtained in the paper.
-    //double phis[15] = {5.29683196,  5.38560137,  3.29346721, -5.52313328, -4.40234988,
-    //    1.95117847,  1.61550749,  4.63700674,  5.15551132,  0.63872836,
-    //    1.05582973, -0.45151964, -2.93235769,  0.30883892,  2.13654636};
+    //double phis[NUM_DOF] = {5.29683196,  5.38560137,  3.29346721, -5.52313328, -4.40234988,
+    //    1.95117847,  1.6NUM_DOF50749,  4.63700674,  5.NUM_DOF551132,  0.63872836,
+    //    1.05582973, -0.45NUM_DOF1964, -2.93235769,  0.30883892,  2.13654636};
 
 #ifdef VERBOSE
-    for(i = 0; i < 15; i++)
+    for(i = 0; i < NUM_DOF; i++)
     {
         fprintf(stderr, "phi[%d] = %lf\n", i, phis[i]);
     }
@@ -53,7 +55,7 @@ int main(int argc, char ** argv)
             double y = (2 * j * M_PI) / px_per_var;
             state = qstate_new(2);
             U_encode(state, x, y);
-            unitary_two_qbit(state, 0, 1, phis);
+            unitary_two_qbit_semitrotter(state, 0, 1, 2, phis);
 
             sampling_no_collapse_bitstring_amplitude(state, 0b01, &result);
             sampling_no_collapse_bitstring_amplitude(state, 0b10, &tmp);

@@ -49,4 +49,19 @@ unitary_two_qbit(qstate_t * state
                 , double * phis);
 
 
+/*
+ * This uses the matrix parametrization from 
+ * https://arxiv.org/pdf/1804.11326.pdf
+ * 
+ * phis must contain 6*n_trot parameters.
+ * */
+int
+unitary_two_qbit_semitrotter(
+                qstate_t * state
+                , unsigned short int act1
+                , unsigned short int act2
+                , size_t n_trot
+                , double * phis);
+
+
 #endif

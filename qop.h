@@ -17,4 +17,7 @@ qop_R(qstate_t * state, unsigned short int act, double phi);
 
 int
 qop_CX(qstate_t * state, unsigned short int act, unsigned short int control);
+
+int
+qop_CZ(qstate_t * state, unsigned short int act, unsigned short int control);
 #endif
