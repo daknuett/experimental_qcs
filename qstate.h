@@ -14,7 +14,7 @@ typedef struct {
     size_t nqbits;
     size_t ndims;
 
-    char current_vector;
+    int current_vector;
 
     double complex * vector[2];
 } qstate_t;

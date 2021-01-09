@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <complex.h>
+#include <time.h>
 
 #include "sampling.h"
 #include "qop.h"
@@ -10,97 +11,90 @@
 #define NUM_DOF 12
 
 int
-U_encode(qstate_t * state, double x, double y);
+U_interaction(qstate_t * state, int i, int j, double phi);
+
 int
-U_interaction(qstate_t * state, double phi);
+U_field(qstate_t * state, int i, double phi);
+
+int
+U_transfer_step(qstate_t * state, double dt, double g);
+
+
 
 int main(int argc, char ** argv)
 {
     qstate_t * state;
 
-    int i, j;
-    double result;
-    double tmp;
-
-    double phis[NUM_DOF];
-    for(i = 0; i < NUM_DOF; i++)
+    if(argc != 2)
     {
-        if(scanf("%lf", &tmp) != 1)
-        {
-            fprintf(stderr, "failed to read phi#%d\n", i);
-            return -1;
-        }
-        phis[i] = tmp;
+        fprintf(stderr, "FATAL: expected 1 argument, got %d\n", argc - 1);
+        return -1;
     }
 
-    // XXX: This is the result obtained in the paper.
-    //double phis[12] = {5.29683196,  5.38560137,  3.29346721, -5.52313328, -4.40234988,
-    //    1.95117847,  1.61250749,  4.63700674,  5.12551132,  0.63872836,
-    //    1.05582973, -0.45121964, -2.93235769,  0.30883892,  2.13654636};
-
-#ifdef VERBOSE
-    for(i = 0; i < NUM_DOF; i++)
+    size_t nqbits;
+    if(sscanf(argv[1], "%zd", &nqbits) != 1)
     {
-        fprintf(stderr, "phi[%d] = %lf\n", i, phis[i]);
+        fprintf(stderr, "FATAL: failed to read argument 1 (nqbits: size_t)\n");
+        return -1;
     }
-#endif
 
-    int px_per_var = 256;
+    int i;
+    const double g = 3;
+    const double dt = 1e-3;
+    const size_t T = 1000;
+    clock_t start, stop;
 
-    for(i = 0; i < px_per_var; i++)
+    state = qstate_new(nqbits);
+    start = clock();
+    for(i = 0; i < T; i++)
     {
-        double x = (2 * i * M_PI) / px_per_var;
-        for(j = 0; j < px_per_var; j++)
+        int result = U_transfer_step(state, dt, g);
+        if(result != 0)
         {
-            double y = (2 * j * M_PI) / px_per_var;
-            state = qstate_new(2);
-            U_encode(state, x, y);
-            unitary_two_qbit_semitrotter(state, 0, 1, 2, phis);
-
-            sampling_no_collapse_bitstring_amplitude(state, 0b01, &result);
-            sampling_no_collapse_bitstring_amplitude(state, 0b10, &tmp);
-            result += tmp;
-
-            if(j != px_per_var - 1)
-            {
-                printf("%f,\t", result);
-            }
-            else
-            {
-                printf("%f\n", result);
-            }
-            
-            qstate_dealloc(state);
+            fprintf(stderr, "ERROR: U_transfer_step returned nonzero %d\n", result);
+            return -2;
         }
     }
+    stop = clock();
+
+    qstate_dealloc(state);
+
+    printf("%ld\n", stop - start);
 
     return 0;
 }
 
 int
-U_interaction(qstate_t * state, double phi)
+U_interaction(qstate_t * state, int i, int j,  double phi)
 {
-    qop_SAFE_APPLY(qop_CX(state, 1, 0));
-    qop_SAFE_APPLY(unitary_RZ(state, 1, phi));
-    qop_SAFE_APPLY(qop_CX(state, 1, 0));
+    qop_SAFE_APPLY(qop_CX(state, i, j));
+    qop_SAFE_APPLY(unitary_RZ(state, i, phi));
+    qop_SAFE_APPLY(qop_CX(state, i, j));
 
     return 0;
 }
 
+int
+U_field(qstate_t * state, int i, double phi)
+{
+    qop_SAFE_APPLY(qop_H(state, i));
+    qop_SAFE_APPLY(unitary_RZ(state, i, phi));
+    qop_SAFE_APPLY(qop_H(state, i));
+
+    return 0;
+}
 
 int
-U_encode(qstate_t * state, double x, double y)
+U_transfer_step(qstate_t * state, double dt, double g)
 {
-    qop_SAFE_APPLY(qop_H(state, 0));
-    qop_SAFE_APPLY(qop_H(state, 1));
-    qop_SAFE_APPLY(unitary_RZ(state, 0, x));
-    qop_SAFE_APPLY(unitary_RZ(state, 1, y));
-    qop_SAFE_APPLY(U_interaction(state, (x - M_PI) * (y - M_PI)));
-    qop_SAFE_APPLY(qop_H(state, 0));
-    qop_SAFE_APPLY(qop_H(state, 1));
-    qop_SAFE_APPLY(unitary_RZ(state, 0, x));
-    qop_SAFE_APPLY(unitary_RZ(state, 1, y));
-    qop_SAFE_APPLY(U_interaction(state, (x - M_PI) * (y - M_PI)));
-
+    int i;
+    for(i = 0; i < state->nqbits - 1; i++)
+    {
+        qop_SAFE_APPLY(U_interaction(state, i, i+1, dt));
+    }
+    for(i = 0; i < state->nqbits; i++)
+    {
+        qop_SAFE_APPLY(U_field(state, i, dt*g));
+    }
     return 0;
 }
