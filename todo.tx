@@ -1,0 +1,3 @@
+- Nelder Mead
+- find gradient of cost function
+- implement stochastic gradient decent
