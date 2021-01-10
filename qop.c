@@ -8,7 +8,7 @@ qop_X(qstate_t * state, unsigned short int act)
     size_t i;
     for(i = 0; i < state->ndims; i++)
     {
-        out_vector(state)[i] = in_vector(state)[i ^ (1UL << act)];
+        out_vector(state, i) = in_vector(state, i ^ (1UL << act));
     }
     qstate_switch_vectors(state);
     return 0;
@@ -23,14 +23,14 @@ qop_H(qstate_t * state, unsigned short int act)
     {
         if(!(i & (1UL << act)))
         {
-            out_vector(state)[i] = (in_vector(state)[i] 
-                                    + in_vector(state)[i ^ (1UL << act)]
+            out_vector(state, i) = (in_vector(state, i) 
+                                    + in_vector(state, i ^ (1UL << act))
                                     ) * M_SQRT1_2;
         }
         else
         {
-            out_vector(state)[i] = ( in_vector(state)[i ^ (1UL << act)]
-                                    - in_vector(state)[i] 
+            out_vector(state, i) = ( in_vector(state, i ^ (1UL << act))
+                                    - in_vector(state, i) 
                                     ) * M_SQRT1_2;
         }
 
@@ -46,14 +46,13 @@ qop_R(qstate_t * state, unsigned short int act, double phi)
     size_t i;
     for(i = 0; i < state->ndims; i++)
     {
-        
         if(i & (1UL << act))
         {
-            out_vector(state)[i] = in_vector(state)[i] * cexp(I * phi);
+            out_vector(state, i) = in_vector(state, i) * cexp(I * phi);
         }
         else
         {
-            out_vector(state)[i] = in_vector(state)[i];
+            out_vector(state, i) = in_vector(state, i);
         }
     }
     qstate_switch_vectors(state);
@@ -70,11 +69,11 @@ qop_CX(qstate_t * state, unsigned short int act, unsigned short int control)
     {
         if(i & (1 << control))
         {
-            out_vector(state)[i] = in_vector(state)[i ^ (1UL << act)];
+            out_vector(state, i) = in_vector(state, i ^ (1UL << act));
         }
         else
         {
-            out_vector(state)[i] = in_vector(state)[i];
+            out_vector(state, i) = in_vector(state, i);
         }
 
     }
@@ -93,11 +92,11 @@ qop_CZ(qstate_t * state, unsigned short int act, unsigned short int control)
     {
         if(i & (1 << control))
         {
-            out_vector(state)[i] = -1 * in_vector(state)[i];
+            out_vector(state, i) = -1 * in_vector(state, i);
         }
         else
         {
-            out_vector(state)[i] = in_vector(state)[i];
+            out_vector(state, i) = in_vector(state, i);
         }
 
     }

@@ -2,14 +2,7 @@
 #include <stdlib.h>
 #include <complex.h>
 
-typedef struct {
-    size_t nqbits;
-    size_t ndims;
-
-    char current_vector;
-
-    double complex * vector[2];
-} qstate_t;
+#include "qstate.h"
 
 qstate_t * 
 qstate_new(size_t nqbits)
@@ -24,6 +17,7 @@ qstate_new(size_t nqbits)
     state->ndims = 1 << nqbits;
     state->current_vector = 0;
 
+#ifdef SIMPLE_QSTATE
     state->vector[0] = calloc(sizeof(complex double), state->ndims);
     if(!state->vector[0])
     {
@@ -38,8 +32,19 @@ qstate_new(size_t nqbits)
         free(state);
         return NULL;
     }
-
     state->vector[0][0] = 1;
+#endif
+#ifdef CHUNKED_QSTATE
+    state->vector = calloc(sizeof(complex double), 2 * state->ndims);
+    if(!state->vector)
+    {
+        free(state);
+        return NULL;
+    }
+    state->chunk_size = CHUNK_SIZE;
+    state->vector[0] = 1;
+#endif
+
 
     return state;
 }
@@ -48,8 +53,13 @@ qstate_new(size_t nqbits)
 void
 qstate_dealloc(qstate_t * state)
 {
+#ifdef SIMPLE_QSTATE
     free(state->vector[0]);
     free(state->vector[1]);
+#endif
+#ifdef CHUNKED_QSTATE
+    free(state->vector);
+#endif
     free(state);
 }
 

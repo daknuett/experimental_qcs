@@ -18,7 +18,7 @@ sampling_no_collapse_amplitudes(
         {
             if(i & (1 << j))
             {
-                res[j] += cabs(in_vector(state)[i]) * cabs(in_vector(state)[i]);
+                res[j] += cabs(in_vector(state, i)) * cabs(in_vector(state, i));
             }
         }
     }
@@ -37,6 +37,6 @@ sampling_no_collapse_bitstring_amplitude(
         return -1;
     }
 
-    *result = cabs(in_vector(state)[bitstring]) * cabs(in_vector(state)[bitstring]);
+    *result = cabs(in_vector(state, bitstring)) * cabs(in_vector(state, bitstring));
     return 0;
 }
